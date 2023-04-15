@@ -356,7 +356,7 @@ a:hover, a:active, a:focus {
 }
 
 #home .home-img {
-  background: url('../images/home-img.jpg') no-repeat;
+  background: url('../images/levi.JPG') no-repeat;
   background-size: cover;
   background-position: 50% 50%;
   width: 100%;
@@ -471,6 +471,7 @@ a:hover, a:active, a:focus {
 
 #education .media-heading {
   margin-bottom: 0px;
+  font-size: 30px;
 }
 
 #education .media .fa {
@@ -479,8 +480,9 @@ a:hover, a:active, a:focus {
 }
 
 #education small {
-  color: #886D1E;
+  color: #a07800;
   font-weight: bold;
+  font-size: 20px;
 }
 
 
