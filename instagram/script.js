@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
        2. BAGIAN PREMIUM: VALIDASI VIA API GOOGLE
        ========================================= */
     // URL API yang baru dan sudah diizinkan oleh Google
-    const API_URL = "https://script.google.com/macros/s/AKfycbxwXo4pbANd0q9ntrV4296zatWrC_HcV7HD5prwgO5RKwbXRatVEDmExOZn02es0rkPCg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxwXo4pbANd0q9ntrV4296zatWrC_HcV7HD5prwgO5RKwbXRatVEDmEx0Zn02es0rkPCg/exec";
     let isPremium = localStorage.getItem('insta_premium') === 'true';
 
     window.activatePremium = async function() {
