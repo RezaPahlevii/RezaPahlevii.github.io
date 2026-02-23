@@ -79,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /* =========================================
        2. BAGIAN PREMIUM: VALIDASI VIA API GOOGLE
        ========================================= */
-    const API_URL = "https://script.google.com/macros/s/AKfycbxfd0m9lFqh3Zjl93Ins76D21WUUv6D8dBIwFH6cwNYMsTKd5O1UTn6C0X-GcCjBJkGMQ/exec";
+    // URL API yang baru dan sudah diizinkan oleh Google
+    const API_URL = "https://script.google.com/macros/s/AKfycbxwXo4pbANd0q9ntrV4296zatWrC_HcV7HD5prwgO5RKwbXRatVEDmExOZn02es0rkPCg/exec";
     let isPremium = localStorage.getItem('insta_premium') === 'true';
 
     window.activatePremium = async function() {
@@ -100,19 +101,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`${API_URL}?kode=${kodeUser}`);
+            // Menggabungkan URL dengan parameter kode secara aman
+            const urlFetch = `${API_URL}?kode=${encodeURIComponent(kodeUser)}`;
+            const response = await fetch(urlFetch);
             const result = await response.json();
 
             if (result.status === "success") {
                 localStorage.setItem('insta_premium', 'true');
-                alert("✅ " + result.message);
+                alert(result.message); // Menampilkan pesan asli dari Google Script
                 window.location.reload();
             } else {
-                alert("❌ " + result.message);
+                alert(result.message); // Menampilkan pesan penolakan asli dari Mayar
             }
         } catch (error) {
             console.error("API Error:", error);
-            alert("🌐 Gangguan koneksi ke server lisensi. Silakan coba lagi.");
+            alert("Fatal Error Frontend: Gagal menghubungi server. Pastikan URL API benar.\n" + error.message);
         } finally {
             if (btnAktifkan) {
                 btnAktifkan.innerText = originalText;
@@ -261,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
         resultContainer.style.display = 'block';
         resultContainer.classList.remove('hidden');
 
-        // PENTING: Map data ke window agar aman diakses saat ganti tab
         window.dashboardData = { 
             following: fng, 
             followers: fol, 
