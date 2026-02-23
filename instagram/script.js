@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: "Buat Ekspor", desc: "Klik 'Buat ekspor'.", image: "assets/step4.png" },
         { title: "Pilih Profil", desc: "Pilih akun Instagram yang ingin dianalisis.", image: "assets/step5.png" },
         { title: "Ekspor ke Perangkat", desc: "Pilih 'Ekspor ke perangkat'.", image: "assets/step6.png" },
-        { title: "Konfirmasi Ekspor", desc: "PENTING: Pilih 'Sesuaikan informasi'. Format pilih JSON.", image: "assets/step7.png" },
+        { title: "Konfirmasi Ekspor", desc: "PENTING: Pilih 'Sesuaikan informasi'. Format pilih JSON, Kualitas 'lebih rendah' dan rentang tanggal 'sepanjang waktu'.", image: "assets/step7.png" },
         { title: "Pilih Pengikut & Mengikuti", desc: "Cari 'Koneksi' lalu centang HANYA 'Pengikut dan mengikuti'.", image: "assets/step8.png" },
-        { title: "Mulai Ekspor", desc: "Atur rentang waktu 'Semua waktu' (disarankan) lalu mulai ekspor.", image: "assets/step9.png" },
+        { title: "Mulai Ekspor", desc: "Atur rentang waktu 'Sepanjang waktu' (SANGAT DISARANKAN).", image: "assets/step9.png" },
         { title: "Unduh File", desc: "Tunggu notifikasi, unduh dan ekstrak file ZIP-nya.", image: "assets/step10.png" }
     ];
 
@@ -77,7 +77,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* =========================================
-       2. LOGIKA UPLOAD & ANALISIS
+       2. BAGIAN PREMIUM: VALIDASI VIA API GOOGLE
+       ========================================= */
+    const API_URL = "https://script.google.com/macros/s/AKfycbxfd0m9lFqh3Zjl93Ins76D21WUUv6D8dBIwFH6cwNYMsTKd5O1UTn6C0X-GcCjBJkGMQ/exec";
+    let isPremium = localStorage.getItem('insta_premium') === 'true';
+
+    window.activatePremium = async function() {
+        const inputField = document.getElementById('access-key-input');
+        const btnAktifkan = document.querySelector("button[onclick='window.activatePremium()']");
+        
+        if (!inputField || !inputField.value.trim()) {
+            alert("⚠️ Silakan masukkan kode akses terlebih dahulu.");
+            return;
+        }
+
+        const kodeUser = inputField.value.trim().toUpperCase();
+
+        const originalText = btnAktifkan ? btnAktifkan.innerText : "Aktifkan";
+        if (btnAktifkan) {
+            btnAktifkan.innerText = "⏳ Mengecek...";
+            btnAktifkan.disabled = true;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}?kode=${kodeUser}`);
+            const result = await response.json();
+
+            if (result.status === "success") {
+                localStorage.setItem('insta_premium', 'true');
+                alert("✅ " + result.message);
+                window.location.reload();
+            } else {
+                alert("❌ " + result.message);
+            }
+        } catch (error) {
+            console.error("API Error:", error);
+            alert("🌐 Gangguan koneksi ke server lisensi. Silakan coba lagi.");
+        } finally {
+            if (btnAktifkan) {
+                btnAktifkan.innerText = originalText;
+                btnAktifkan.disabled = false;
+            }
+        }
+    };
+
+
+    /* =========================================
+       3. LOGIKA UPLOAD & ANALISIS
        ========================================= */
     const btnAnalyze = document.getElementById('btn-analyze');
     const inputFollowers = document.getElementById('file-followers');
@@ -135,17 +181,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error("Data tidak ditemukan. Pastikan Anda mengunggah file JSON yang benar dari Instagram.");
                 }
 
-                // Logika Perbandingan
+                // Logika Perbandingan Data
                 const notFollowingBack = resFollowing.users.filter(u => !resFollowers.users.includes(u));
+                const fans = resFollowers.users.filter(u => !resFollowing.users.includes(u));
+                const mutuals = resFollowers.users.filter(u => resFollowing.users.includes(u));
 
                 // Hitung Rentang Waktu
                 const allTimestamps = [...resFollowers.times, ...resFollowing.times].filter(t => t > 0);
                 const dateRange = {
-                    start: allTimestamps.length ? new Date(Math.min(...allTimestamps) * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Tidak diketahui",
+                    start: allTimestamps.length ? new Date(Math.min(...allTimestamps) * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Awal Akun",
                     end: allTimestamps.length ? new Date(Math.max(...allTimestamps) * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Sekarang"
                 };
 
-                renderDashboard(resFollowing.users, resFollowers.users, notFollowingBack, dateRange);
+                renderDashboard(resFollowing.users, resFollowers.users, notFollowingBack, fans, mutuals, dateRange);
 
             } catch (err) {
                 alert("Gagal: " + err.message);
@@ -167,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const json = JSON.parse(text);
-            let list = Array.isArray(json) ? json : (json.relationships_following || []);
+            let list = Array.isArray(json) ? json : (json.relationships_following || json.relationships_followers || []);
             
             list.forEach(item => {
                 let u = null;
@@ -193,14 +241,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* =========================================
-       3. RENDER DASHBOARD (BAHASA INDONESIA)
+       4. RENDER DASHBOARD (FREEMIUM & PREMIUM)
        ========================================= */
-    
     let activeData = [];
     let currentPage = 1;
     let itemsPerPage = 10;
 
-    function renderDashboard(following, followers, dontFollowBack, dateRange) {
+    function renderDashboard(fng, fol, unf, fans, mutuals, dateRange) {
         let resultContainer = document.getElementById('results-view') || document.getElementById('result-section');
         
         if (!resultContainer) {
@@ -214,9 +261,16 @@ document.addEventListener('DOMContentLoaded', () => {
         resultContainer.style.display = 'block';
         resultContainer.classList.remove('hidden');
 
-        window.dashboardData = { following, followers, dontFollow: dontFollowBack };
+        // PENTING: Map data ke window agar aman diakses saat ganti tab
+        window.dashboardData = { 
+            following: fng, 
+            followers: fol, 
+            dontFollow: unf, 
+            fans: fans, 
+            mutuals: mutuals 
+        };
 
-        const ratio = following.length > 0 ? ((followers.length / following.length) * 100).toFixed(1) : 0;
+        const ratio = fng.length > 0 ? ((fol.length / fng.length) * 100).toFixed(1) : 0;
 
         resultContainer.innerHTML = `
             <div style="background: #ffffff; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin-bottom: 30px;">
@@ -229,15 +283,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
                     <div style="background: #ecfdf5; padding: 20px; border-radius: 12px; border: 1px solid #a7f3d0;">
                         <div style="color: #047857; font-weight: 600; font-size: 0.85rem;"><i class="ti ti-users"></i> Pengikut</div>
-                        <h2 style="font-size: 1.8rem; margin: 5px 0 0 0; color: #064e3b;">${followers.length}</h2>
+                        <h2 style="font-size: 1.8rem; margin: 5px 0 0 0; color: #064e3b;">${fol.length}</h2>
                     </div>
                     <div style="background: #eff6ff; padding: 20px; border-radius: 12px; border: 1px solid #bfdbfe;">
                         <div style="color: #1d4ed8; font-weight: 600; font-size: 0.85rem;"><i class="ti ti-user-plus"></i> Mengikuti</div>
-                        <h2 style="font-size: 1.8rem; margin: 5px 0 0 0; color: #1e3a8a;">${following.length}</h2>
+                        <h2 style="font-size: 1.8rem; margin: 5px 0 0 0; color: #1e3a8a;">${fng.length}</h2>
                     </div>
                     <div style="background: #fff1f2; padding: 20px; border-radius: 12px; border: 1px solid #fecdd3;">
-                        <div style="color: #be123c; font-weight: 600; font-size: 0.85rem;"><i class="ti ti-user-x"></i> Tidak Mengikuti Balik</div>
-                        <h2 style="font-size: 1.8rem; margin: 5px 0 0 0; color: #881337;">${dontFollowBack.length}</h2>
+                        <div style="color: #be123c; font-weight: 600; font-size: 0.85rem;"><i class="ti ti-user-x"></i> Unfollowers</div>
+                        <h2 style="font-size: 1.8rem; margin: 5px 0 0 0; color: #881337;">${unf.length}</h2>
                     </div>
                     <div style="background: #faf5ff; padding: 20px; border-radius: 12px; border: 1px solid #e9d5ff;">
                         <div style="color: #7e22ce; font-weight: 600; font-size: 0.85rem;"><i class="ti ti-chart-pie"></i> Rasio Akun</div>
@@ -246,23 +300,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div style="margin-bottom: 20px; display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
-                    <button onclick="window.switchTab('dontFollow')" id="tab-dont" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-                        Tidak Follow Balik
+                    <button onclick="window.switchTab('dontFollow')" id="tab-dontFollow" class="tab-btn active" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Tidak Follow Balik</button>
+                    <button onclick="window.switchTab('followers')" id="tab-followers" class="tab-btn" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Daftar Pengikut</button>
+                    <button onclick="window.switchTab('following')" id="tab-following" class="tab-btn" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Daftar Mengikuti</button>
+                    <button onclick="window.switchTab('fans')" id="tab-fans" class="tab-btn ${!isPremium ? 'locked' : ''}" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                        ${!isPremium ? '🔒 Fans' : '⭐ Fans'}
                     </button>
-                    <button onclick="window.switchTab('followers')" id="tab-followers" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-                        Daftar Pengikut
-                    </button>
-                    <button onclick="window.switchTab('following')" id="tab-following" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-                        Daftar Mengikuti
+                    <button onclick="window.switchTab('mutuals')" id="tab-mutuals" class="tab-btn ${!isPremium ? 'locked' : ''}" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                        ${!isPremium ? '🔒 Mutual' : '⭐ Mutual'}
                     </button>
                 </div>
 
                 <div id="alert-header" style="background: #fff1f2; border: 1px solid #fecdd3; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div>
-                        <h4 id="list-title" style="margin: 0; color: #be123c; font-size: 1.1rem;">Akun Yang Tidak Mengikuti Balik</h4>
-                        <p id="list-desc" style="margin: 5px 0 0 0; font-size: 0.85rem; color: #881337;">Daftar akun yang Anda ikuti namun mereka tidak mengikuti Anda kembali.</p>
+                        <h4 id="list-title" style="margin: 0; color: #be123c; font-size: 1.1rem;">Akun Unfollowers</h4>
+                        <p id="list-desc" style="margin: 5px 0 0 0; font-size: 0.85rem; color: #881337;">Daftar akun yang Anda ikuti namun tidak mengikuti Anda kembali.</p>
                     </div>
-                    <span id="list-badge" style="background: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #be123c; border: 1px solid #fecdd3;">${dontFollowBack.length} akun</span>
+                    <span id="list-badge" style="background: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; color: #be123c; border: 1px solid #fecdd3;">${unf.length} akun</span>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px;">
@@ -277,6 +331,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="card-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 <div id="card-pagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px;"></div>
                 
+                ${!isPremium ? `
+                <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 16px; border: 1px dashed #3b82f6; text-align: left;">
+                    <h3 style="margin: 0 0 10px 0; color: #1e293b; text-align: center;">Buka Premium Insights (Sekali Bayar)</h3>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; font-size: 0.9rem; color: #475569;">
+                        <strong style="color: #0f172a;">Cara Mendapatkan Kode Akses:</strong>
+                        <ol style="margin: 5px 0 0 0; padding-left: 20px;">
+                            <li>Klik tombol hijau <b>"Beli Kode Akses"</b> di bawah ini.</li>
+                            <li>Selesaikan pembayaran (Otomatis via Mayar).</li>
+                            <li>Kode Lisensi akan <b>langsung muncul di layar Anda</b> dan dikirim ke email.</li>
+                            <li>Salin (Copy) kode tersebut, lalu tempel (Paste) di kotak bawah ini.</li>
+                        </ol>
+                    </div>
+
+                    <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="access-key-input" placeholder="Tempel Kode Lisensi di sini..." style="padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; width: 250px;">
+                        <button onclick="window.activatePremium()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">Aktifkan</button>
+                        <a href="https://rezapahlevi-2028.myr.id/app/kode-akses-premium-insta-tracker" target="_blank" style="background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; border: none; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">Beli Kode Akses (Rp5.000) ↗</a>
+                    </div>
+                </div>` : ''}
+
                 <div style="text-align:center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
                     <button onclick="location.reload()" style="background: white; border: 1px solid #cbd5e1; padding: 12px 24px; border-radius: 8px; cursor: pointer; color: #64748b; font-weight: 600;">
                         Mulai Analisis Baru
@@ -286,50 +361,73 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         document.getElementById('dashboard-search').addEventListener('input', (e) => {
-            currentPage = 1;
-            renderListUI(e.target.value);
+            currentPage = 1; renderListUI(e.target.value);
         });
 
         document.getElementById('dashboard-rows').addEventListener('change', (e) => {
             itemsPerPage = parseInt(e.target.value);
-            currentPage = 1;
-            renderListUI();
+            currentPage = 1; renderListUI();
         });
 
         window.switchTab = function(type) {
+            if ((type === 'fans' || type === 'mutuals') && !isPremium) {
+                alert("🔒 Fitur ini terkunci. Silakan masukkan kode akses premium via API.");
+                return;
+            }
+
             currentPage = 1;
-            const tabDont = document.getElementById('tab-dont');
-            const tabFollowers = document.getElementById('tab-followers');
-            const tabFollowing = document.getElementById('tab-following');
+            activeData = window.dashboardData[type] || [];
+            
+            const tabs = ['dontFollow', 'followers', 'following', 'fans', 'mutuals'];
             const alertHeader = document.getElementById('alert-header');
             const title = document.getElementById('list-title');
             const desc = document.getElementById('list-desc');
             const badge = document.getElementById('list-badge');
 
-            [tabDont, tabFollowers, tabFollowing].forEach(t => {
-                t.style.background = '#f1f5f9'; t.style.color = '#64748b'; t.style.border = '1px solid #e2e8f0';
+            // Reset Tab Styling
+            tabs.forEach(t => {
+                const btn = document.getElementById('tab-' + t);
+                if(btn) {
+                    btn.style.background = '#f1f5f9'; btn.style.color = '#64748b'; btn.style.border = '1px solid #e2e8f0';
+                }
             });
 
+            const activeBtn = document.getElementById('tab-' + type);
+
             if (type === 'dontFollow') {
-                activeData = window.dashboardData.dontFollow;
-                tabDont.style.background = '#ef4444'; tabDont.style.color = 'white'; tabDont.style.border = 'none';
+                activeBtn.style.background = '#ef4444'; activeBtn.style.color = 'white'; activeBtn.style.border = 'none';
                 alertHeader.style.background = '#fff1f2'; alertHeader.style.borderColor = '#fecdd3';
-                title.innerText = "Akun Yang Tidak Mengikuti Balik"; title.style.color = '#be123c';
-                desc.innerText = "Daftar akun yang Anda ikuti namun mereka tidak mengikuti Anda kembali."; desc.style.color = '#881337';
+                title.innerText = "Akun Unfollowers"; title.style.color = '#be123c';
+                desc.innerText = "Daftar akun yang Anda ikuti namun tidak mengikuti Anda kembali."; desc.style.color = '#881337';
+                badge.style.color = '#be123c'; badge.style.borderColor = '#fecdd3';
             } 
             else if (type === 'followers') {
-                activeData = window.dashboardData.followers;
-                tabFollowers.style.background = '#10b981'; tabFollowers.style.color = 'white'; tabFollowers.style.border = 'none';
+                activeBtn.style.background = '#10b981'; activeBtn.style.color = 'white'; activeBtn.style.border = 'none';
                 alertHeader.style.background = '#ecfdf5'; alertHeader.style.borderColor = '#a7f3d0';
                 title.innerText = "Daftar Pengikut"; title.style.color = '#047857';
                 desc.innerText = "Daftar semua akun yang mengikuti profil Instagram Anda."; desc.style.color = '#064e3b';
+                badge.style.color = '#047857'; badge.style.borderColor = '#a7f3d0';
             } 
             else if (type === 'following') {
-                activeData = window.dashboardData.following;
-                tabFollowing.style.background = '#3b82f6'; tabFollowing.style.color = 'white'; tabFollowing.style.border = 'none';
+                activeBtn.style.background = '#3b82f6'; activeBtn.style.color = 'white'; activeBtn.style.border = 'none';
                 alertHeader.style.background = '#eff6ff'; alertHeader.style.borderColor = '#bfdbfe';
                 title.innerText = "Daftar Mengikuti"; title.style.color = '#1d4ed8';
                 desc.innerText = "Daftar semua akun yang sedang Anda ikuti saat ini."; desc.style.color = '#1e3a8a';
+                badge.style.color = '#1d4ed8'; badge.style.borderColor = '#bfdbfe';
+            }
+            else if (type === 'fans') {
+                activeBtn.style.background = '#f59e0b'; activeBtn.style.color = 'white'; activeBtn.style.border = 'none';
+                alertHeader.style.background = '#fffbeb'; alertHeader.style.borderColor = '#fde68a';
+                title.innerText = "Penggemar (Fans)"; title.style.color = '#b45309';
+                desc.innerText = "Akun yang mengikuti Anda, namun Anda belum mengikuti mereka kembali."; desc.style.color = '#92400e';
+                badge.style.color = '#b45309'; badge.style.borderColor = '#fde68a';
+            }
+            else if (type === 'mutuals') {
+                activeBtn.style.background = '#8b5cf6'; activeBtn.style.color = 'white'; activeBtn.style.border = 'none';
+                alertHeader.style.background = '#f5f3ff'; alertHeader.style.borderColor = '#ddd6fe';
+                title.innerText = "Saling Mengikuti"; title.style.color = '#6d28d9';
+                desc.innerText = "Daftar teman yang saling mengikuti satu sama lain dengan Anda."; desc.style.color = '#5b21b6';
+                badge.style.color = '#6d28d9'; badge.style.borderColor = '#ddd6fe';
             }
 
             badge.innerText = `${activeData.length} akun`;
@@ -347,10 +445,10 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = "";
         pagination.innerHTML = "";
 
-        let filtered = activeData.filter(u => u && u.toLowerCase().includes(searchTerm.toLowerCase()));
+        let filtered = (activeData || []).filter(u => u && u.toLowerCase().includes(searchTerm.toLowerCase()));
 
         if (filtered.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:40px; color:#64748b;">Akun tidak ditemukan.</div>`;
+            container.innerHTML = `<div style="text-align:center; padding:40px; color:#64748b;">Data tidak ditemukan.</div>`;
             return;
         }
 
@@ -388,15 +486,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const createBtn = (text, page, disabled = false, active = false) => {
                 const btn = document.createElement('button');
                 btn.innerHTML = text;
-                btn.style.cssText = `padding:8px 14px; border-radius:6px; border:1px solid ${active ? '#3b82f6' : '#cbd5e1'}; background:${active ? '#3b82f6' : 'white'}; color:${active ? 'white' : '#475569'}; cursor:${disabled ? 'not-allowed' : 'pointer'}; opacity:${disabled ? 0.5 : 1}; font-weight:600;`;
+                btn.style.cssText = `padding:8px 14px; border-radius:6px; border:1px solid ${active ? '#3b82f6' : '#cbd5e1'}; background:${active ? '#3b82f6' : 'white'}; color:${active ? 'white' : '#475569'}; cursor:${disabled ? 'not-allowed' : 'pointer'}; opacity:${disabled ? 0.5 : 1}; font-weight:600; margin: 0 2px;`;
                 if (!disabled) btn.onclick = () => { currentPage = page; renderListUI(searchTerm); };
                 return btn;
             };
-            pagination.appendChild(createBtn('Sebelumnya', currentPage - 1, currentPage === 1));
-            let startP = Math.max(1, currentPage - 1);
-            let endP = Math.min(totalPages, currentPage + 1);
+            pagination.appendChild(createBtn('<', currentPage - 1, currentPage === 1));
+            let startP = Math.max(1, currentPage - 2);
+            let endP = Math.min(totalPages, currentPage + 2);
             for(let i = startP; i <= endP; i++) pagination.appendChild(createBtn(i, i, false, i === currentPage));
-            pagination.appendChild(createBtn('Selanjutnya', currentPage + 1, currentPage === totalPages));
+            pagination.appendChild(createBtn('>', currentPage + 1, currentPage === totalPages));
         }
     }
 
