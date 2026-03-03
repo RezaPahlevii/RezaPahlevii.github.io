@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /* =========================================
        2. BAGIAN PREMIUM: VALIDASI VIA API GOOGLE
        ========================================= */
-    // URL API yang baru dan sudah diizinkan oleh Google
     const API_URL = "https://script.google.com/macros/s/AKfycbxwXo4pbANd0q9ntrV4296zatWrC_HcV7HD5prwgO5RKwbXRatVEDmEx0Zn02es0rkPCg/exec";
     let isPremium = localStorage.getItem('insta_premium') === 'true';
 
@@ -101,17 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Menggabungkan URL dengan parameter kode secara aman
             const urlFetch = `${API_URL}?kode=${encodeURIComponent(kodeUser)}`;
             const response = await fetch(urlFetch);
             const result = await response.json();
 
             if (result.status === "success") {
                 localStorage.setItem('insta_premium', 'true');
-                alert(result.message); // Menampilkan pesan asli dari Google Script
+                alert(result.message);
                 window.location.reload();
             } else {
-                alert(result.message); // Menampilkan pesan penolakan asli dari Mayar
+                alert(result.message);
             }
         } catch (error) {
             console.error("API Error:", error);
@@ -334,24 +332,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="card-pagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px;"></div>
                 
                 ${!isPremium ? `
-                <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-radius: 16px; border: 1px dashed #3b82f6; text-align: left;">
-                    <h3 style="margin: 0 0 10px 0; color: #1e293b; text-align: center;">Buka Premium Insights (Sekali Bayar)</h3>
-                    
-                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; font-size: 0.9rem; color: #475569;">
-                        <strong style="color: #0f172a;">Cara Mendapatkan Kode Akses:</strong>
-                        <ol style="margin: 5px 0 0 0; padding-left: 20px;">
-                            <li>Klik tombol hijau <b>"Beli Kode Akses"</b> di bawah ini.</li>
-                            <li>Selesaikan pembayaran (Otomatis via Mayar).</li>
-                            <li>Kode Lisensi akan <b>langsung muncul di layar Anda</b> dan dikirim ke email.</li>
-                            <li>Salin (Copy) kode tersebut, lalu tempel (Paste) di kotak bawah ini.</li>
-                        </ol>
-                    </div>
-
-                    <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                        <input type="text" id="access-key-input" placeholder="Tempel Kode Lisensi di sini..." style="padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; width: 250px;">
-                        <button onclick="window.activatePremium()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">Aktifkan</button>
-                        <a href="https://rezapahlevi-2028.myr.id/app/kode-akses-premium-insta-tracker" target="_blank" style="background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; border: none; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">Beli Kode Akses (Rp5.000) ↗</a>
-                    </div>
+                <div style="margin-top: 40px; padding: 40px; background: #f8fafc; border-radius: 16px; border: 2px dashed #94a3b8; text-align: center;">
+                    <div style="display: inline-block; background: #e2e8f0; color: #475569; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; margin-bottom: 15px; letter-spacing: 1px;">COMING SOON</div>
+                    <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1.4rem;">Premium Insights Sedang Dipersiapkan</h3>
+                    <p style="color: #64748b; font-size: 0.95rem; max-width: 500px; margin: 0 auto; line-height: 1.6;">Fitur untuk melihat daftar <strong>Penggemar (Fans)</strong> dan teman <strong>Saling Mengikuti (Mutual)</strong> sedang dalam tahap penyempurnaan sistem. Nantikan pembaruannya segera!</p>
                 </div>` : ''}
 
                 <div style="text-align:center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
@@ -373,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.switchTab = function(type) {
             if ((type === 'fans' || type === 'mutuals') && !isPremium) {
-                alert("🔒 Fitur ini terkunci. Silakan masukkan kode akses premium via API.");
+                alert("🔒 Fitur Premium (Fans & Mutual) sedang dalam tahap pengembangan (Coming Soon). Nantikan pembaruannya segera!");
                 return;
             }
 
