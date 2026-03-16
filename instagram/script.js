@@ -77,54 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* =========================================
-       2. BAGIAN PREMIUM: VALIDASI VIA API GOOGLE
-       ========================================= */
-    const API_URL = "https://script.google.com/macros/s/AKfycbxwXo4pbANd0q9ntrV4296zatWrC_HcV7HD5prwgO5RKwbXRatVEDmEx0Zn02es0rkPCg/exec";
-    let isPremium = localStorage.getItem('insta_premium') === 'true';
-
-    window.activatePremium = async function() {
-        const inputField = document.getElementById('access-key-input');
-        const btnAktifkan = document.querySelector("button[onclick='window.activatePremium()']");
-        
-        if (!inputField || !inputField.value.trim()) {
-            alert("⚠️ Silakan masukkan kode akses terlebih dahulu.");
-            return;
-        }
-
-        const kodeUser = inputField.value.trim().toUpperCase();
-
-        const originalText = btnAktifkan ? btnAktifkan.innerText : "Aktifkan";
-        if (btnAktifkan) {
-            btnAktifkan.innerText = "⏳ Mengecek...";
-            btnAktifkan.disabled = true;
-        }
-
-        try {
-            const urlFetch = `${API_URL}?kode=${encodeURIComponent(kodeUser)}`;
-            const response = await fetch(urlFetch);
-            const result = await response.json();
-
-            if (result.status === "success") {
-                localStorage.setItem('insta_premium', 'true');
-                alert(result.message);
-                window.location.reload();
-            } else {
-                alert(result.message);
-            }
-        } catch (error) {
-            console.error("API Error:", error);
-            alert("Fatal Error Frontend: Gagal menghubungi server. Pastikan URL API benar.\n" + error.message);
-        } finally {
-            if (btnAktifkan) {
-                btnAktifkan.innerText = originalText;
-                btnAktifkan.disabled = false;
-            }
-        }
-    };
-
-
-    /* =========================================
-       3. LOGIKA UPLOAD & ANALISIS
+       2. LOGIKA UPLOAD & ANALISIS
        ========================================= */
     const btnAnalyze = document.getElementById('btn-analyze');
     const inputFollowers = document.getElementById('file-followers');
@@ -242,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* =========================================
-       4. RENDER DASHBOARD (FREEMIUM & PREMIUM)
+       3. RENDER DASHBOARD
        ========================================= */
     let activeData = [];
     let currentPage = 1;
@@ -303,11 +256,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button onclick="window.switchTab('dontFollow')" id="tab-dontFollow" class="tab-btn active" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Tidak Follow Balik</button>
                     <button onclick="window.switchTab('followers')" id="tab-followers" class="tab-btn" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Daftar Pengikut</button>
                     <button onclick="window.switchTab('following')" id="tab-following" class="tab-btn" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Daftar Mengikuti</button>
-                    <button onclick="window.switchTab('fans')" id="tab-fans" class="tab-btn ${!isPremium ? 'locked' : ''}" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-                        ${!isPremium ? '🔒 Fans' : '⭐ Fans'}
+                    <button onclick="window.switchTab('fans')" id="tab-fans" class="tab-btn" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                        Fans
                     </button>
-                    <button onclick="window.switchTab('mutuals')" id="tab-mutuals" class="tab-btn ${!isPremium ? 'locked' : ''}" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-                        ${!isPremium ? '🔒 Mutual' : '⭐ Mutual'}
+                    <button onclick="window.switchTab('mutuals')" id="tab-mutuals" class="tab-btn" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                        Mutualan
                     </button>
                 </div>
 
@@ -330,13 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div id="card-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 <div id="card-pagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px;"></div>
-                
-                ${!isPremium ? `
-                <div style="margin-top: 40px; padding: 40px; background: #f8fafc; border-radius: 16px; border: 2px dashed #94a3b8; text-align: center;">
-                    <div style="display: inline-block; background: #e2e8f0; color: #475569; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; margin-bottom: 15px; letter-spacing: 1px;">COMING SOON</div>
-                    <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1.4rem;">Premium Insights Sedang Dipersiapkan</h3>
-                    <p style="color: #64748b; font-size: 0.95rem; max-width: 500px; margin: 0 auto; line-height: 1.6;">Fitur untuk melihat daftar <strong>Penggemar (Fans)</strong> dan teman <strong>Saling Mengikuti (Mutual)</strong> sedang dalam tahap penyempurnaan sistem. Nantikan pembaruannya segera!</p>
-                </div>` : ''}
 
                 <div style="text-align:center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
                     <button onclick="location.reload()" style="background: white; border: 1px solid #cbd5e1; padding: 12px 24px; border-radius: 8px; cursor: pointer; color: #64748b; font-weight: 600;">
@@ -356,11 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         window.switchTab = function(type) {
-            if ((type === 'fans' || type === 'mutuals') && !isPremium) {
-                alert("🔒 Fitur Premium (Fans & Mutual) sedang dalam tahap pengembangan (Coming Soon). Nantikan pembaruannya segera!");
-                return;
-            }
-
             currentPage = 1;
             activeData = window.dashboardData[type] || [];
             
