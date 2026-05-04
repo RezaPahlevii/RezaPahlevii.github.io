@@ -9,14 +9,51 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #131722; color: #d1d4dc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
+        .btn-back {
+            padding: 6px 14px;
+            background-color: #2a2e39;
+            color: #d1d4dc;
+            text-decoration: none;
+            border: 1px solid #363c4e;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-back:hover { background-color: #363c4e; color: #ffffff; }
+
+        /* Kontainer Grafik dengan Tinggi Prioritas */
+        .chart-container { 
+            width: 100%; 
+            height: 85vh; /* Mengambil 85% tinggi layar agar grafik lega */
+            background-color: #131722;
+        }
+
+        /* Footer di Letakkan Paling Bawah (Akan muncul saat scroll) */
+        .disclaimer-note {
+            padding: 5px; /* Memberi ruang napas lebih luas di bawah grafik */
+            background-color: #131722;
+            border-top: 1px solid #2a2e39;
+            text-align: center;
+        }
+        .disclaimer-note p {
+            font-size: 0.75rem;
+            color: #787b86;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
         /* Navigasi Atas */
-        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background-color: #1e222d; border-bottom: 1px solid #2a2e39; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 7px 19px; background-color: #1e222d; border-bottom: 1px solid #2a2e39; }
         .top-nav h1 { font-size: 1.2rem; font-weight: 600; color: #ffffff; }
-        .top-nav a { padding: 8px 16px; background-color: #2962ff; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; transition: background 0.3s; }
+        .top-nav a { padding: 3px 14px; background-color: #076900; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; transition: background 0.3s; }
         .top-nav a:hover { background-color: #1e53e5; }
         
         /* Kontainer Utama Grafik */
         .chart-container { flex: 1; width: 100%; position: relative; }
+
+        .copyright-text {margin-top: 10px; font-size: 0.65rem; color: #5d606b; opacity: 0.7; letter-spacing: 0.4px;
+}
     </style>
 </head>
 <body>
@@ -29,6 +66,11 @@
 
     <!-- Kontainer injeksi Widget TradingView -->
     <main class="chart-container" id="tv_chart_container"></main>
+
+    <footer class="disclaimer-note">
+    <p><strong>Catatan Data:</strong> Data disediakan oleh TradingView. Sesuai regulasi bursa, instrumen tertentu mungkin mengalami jeda (<em>delay</em>) 10-15 menit. Halaman ini berfungsi sebagai alat analisis teknikal tambahan dan bukan sebagai instruksi mutlak untuk transaksi finansial.</p>
+    <p class="copyright-text">Copyright &copy; 2026 Artitech Labs | Reza Pahlevi</p>
+</footer>
 
     <!-- Pustaka JavaScript TradingView -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>

@@ -101,3 +101,32 @@ body {
         font-size: 0.85rem;
     }
 }
+
+/* --- Konfigurasi UI Catatan Disclaimer --- */
+.disclaimer-note {
+    margin-top: 20px;
+    padding: 15px;
+    border-top: 1px solid #2a2e39; /* Garis pemisah tipis */
+    text-align: center;
+}
+
+.disclaimer-note p {
+    font-size: 0.8rem; /* Ukuran teks yang lebih kecil agar tidak mendominasi */
+    color: #787b86; /* Warna abu-abu redup standar TradingView */
+    line-height: 1.5;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.disclaimer-note strong {
+    color: #9094a0; /* Menonjolkan kata 'Catatan Data' */
+}
+
+/* Styling khusus untuk teks copyright */
+.copyright-text {
+    margin-top: 12px;
+    font-size: 0.65rem !important; /* Ukuran lebih kecil dari disclaimer */
+    color: #5d606b; /* Warna lebih redup agar tidak mencolok */
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+}
