@@ -1,0 +1,103 @@
+/* Mengatur ulang margin default dan font sistem standar developer */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Latar belakang gelap elegan (Mirip terminal IDE) */
+body {
+    background-color: #131722; 
+    color: #d1d4dc;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.dashboard-container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header {
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2e39;
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    color: #ffffff;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+}
+
+.header p {
+    font-size: 1rem;
+    color: #787b86;
+}
+
+/* Kontainer widget responsif */
+.widget-wrapper {
+    width: 100%;
+    height: 700px;
+    background-color: #1e222d;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+/* Adaptasi untuk layar HP/Mobile */
+@media (max-width: 768px) {
+    .widget-wrapper {
+        height: 600px;
+    }
+    .header h1 {
+        font-size: 1.4rem;
+    }
+    .header p {
+        font-size: 0.85rem;
+    }
+}
+
+/* --- Konfigurasi UI Bar Navigasi --- */
+.nav-container {
+    margin-top: 18px;
+}
+
+.nav-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #2962ff;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Efek interaktif saat kursor diarahkan ke tombol */
+.nav-btn:hover {
+    background-color: #1e53e5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Penyesuaian jarak untuk layar HP */
+@media (max-width: 768px) {
+    .nav-container {
+        margin-top: 12px;
+    }
+    .nav-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+}

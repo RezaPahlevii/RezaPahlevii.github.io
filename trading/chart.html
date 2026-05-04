@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Analisis Teknikal</title>
+    <style>
+        /* CSS Reset dan Tema Gelap */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #131722; color: #d1d4dc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Navigasi Atas */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background-color: #1e222d; border-bottom: 1px solid #2a2e39; }
+        .top-nav h1 { font-size: 1.2rem; font-weight: 600; color: #ffffff; }
+        .top-nav a { padding: 8px 16px; background-color: #2962ff; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; transition: background 0.3s; }
+        .top-nav a:hover { background-color: #1e53e5; }
+        
+        /* Kontainer Utama Grafik */
+        .chart-container { flex: 1; width: 100%; position: relative; }
+    </style>
+</head>
+<body>
+
+    <!-- Bar Navigasi -->
+    <header class="top-nav">
+        <h1>Grafik Analisis Mendalam</h1>
+        <a href="index.html">Kembali ke Dasbor Makro</a>
+    </header>
+
+    <!-- Kontainer injeksi Widget TradingView -->
+    <main class="chart-container" id="tv_chart_container"></main>
+
+    <!-- Pustaka JavaScript TradingView -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    
+    <!-- Konfigurasi Parameter Grafik -->
+    <script type="text/javascript">
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": "INDEX:DXY",           // Simbol default saat halaman dibuka
+            "interval": "D",                 // Timeframe: 'D' untuk Daily (Harian)
+            "timezone": "Asia/Jakarta",      // Sinkronisasi dengan Waktu Indonesia Barat
+            "theme": "dark",
+            "style": "1",                    // 1 = Grafik Candlestick
+            "locale": "id",
+            "enable_publishing": false,
+            "backgroundColor": "#131722",
+            "gridColor": "#1f293d",
+            "hide_top_toolbar": false,       // Wajib false agar Anda bisa mencari instrumen lain
+            "hide_legend": false,
+            "save_image": false,
+            "container_id": "tv_chart_container",
+            
+            // Injeksi Indikator Otomatis (Set and Forget)
+            "studies": [
+                "BB@tv-basicstudies",        // Algoritma Bollinger Bands
+                "Moving Average@tv-basicstudies" // Algoritma Moving Average
+            ],
+            
+            // Menyediakan Watchlist bawaan di bilah kanan
+            "watchlist": [
+                "INDEX:DXY",
+                "OANDA:XAUUSD",
+                "TVC:UKOIL",
+                "OANDA:EURUSD"
+            ],
+            "details": true,
+            "hotlist": false,
+            "calendar": false
+        });
+    </script>
+
+</body>
+</html>
